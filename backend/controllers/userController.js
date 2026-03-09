@@ -26,6 +26,7 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password: hashedPassword,
+          
         });
 
         // Generate JWT token for the user
@@ -70,7 +71,7 @@ export const login = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                registerUser
+                
             },
             token,
         });
@@ -78,4 +79,63 @@ export const login = async (req, res) => {
         console.log(error);
         res.status(500).json({message: "Something went wrong"});
     }
+}
+
+
+export const updatedUser = async (req, res) => {
+    const id = req.params.id;
+
+    const {name, email, password} = req.body;
+
+    try {
+
+        const user = await User.findById(id);
+
+        if(!user) {
+            return res.status(404).json({message: "User not found"});
+        }
+
+        user.name = name;
+        user.email = email;
+        user.password = password;
+
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt)
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "User updated successfully",
+            data: user,
+        });
+        
+    } catch (error) {
+     console.log(error);
+        res.status(500).json({message: "Server error"});
+    }
+}
+
+export const deleteUser = async (req, res) => {
+    const id = req.params.id;
+
+ try {
+
+    const user = await User.findByIdAndDelete(id);
+
+    if(!user) {
+        return res.status(404).json({message: "User not found"});
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+        data: user,
+    });
+    
+ } catch (error) {
+    console.log(error);
+    res.status(500).json({message: "Server error"});
+    
+ }
 }
